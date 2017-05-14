@@ -236,49 +236,56 @@ public class SMSPlugin
         return null;
     }
 
-    private PluginResult listSMS(JSONObject filter, CallbackContext callbackContext) {
+    private PluginResult listSMS(final JSONObject filter, final CallbackContext callbackContext) {
         Log.i(LOGTAG, ACTION_LIST_SMS);
-        String uri_filter = filter.has(BOX) ? filter.optString(BOX) : "inbox";
-        int fread = filter.has(READ) ? filter.optInt(READ) : -1;
-        int fid = filter.has("_id") ? filter.optInt("_id") : -1;
-        String faddress = filter.optString(ADDRESS);
-        String fcontent = filter.optString(BODY);
-        int indexFrom = filter.has("indexFrom") ? filter.optInt("indexFrom") : 0;
-        int maxCount = filter.has("maxCount") ? filter.optInt("maxCount") : 10;
-        JSONArray jsons = new JSONArray();
-        Activity ctx = this.cordova.getActivity();
-        Uri uri = Uri.parse((SMS_URI_ALL + uri_filter));
-        Cursor cur = ctx.getContentResolver().query(uri, (String[]) null, "", (String[]) null, null);
-        int i = 0;
-        while (cur.moveToNext()) {
-            JSONObject json;
-            boolean matchFilter = false;
-            if (fid > -1) {
-                matchFilter = (fid == cur.getInt(cur.getColumnIndex("_id")));
-            } else if (fread > -1) {
-                matchFilter = (fread == cur.getInt(cur.getColumnIndex(READ)));
-            } else if (faddress.length() > 0) {
-                matchFilter = PhoneNumberUtils.compare(faddress, cur.getString(cur.getColumnIndex(ADDRESS)).trim());
-            } else if (fcontent.length() > 0) {
-                matchFilter = fcontent.equals(cur.getString(cur.getColumnIndex(BODY)).trim());
-            } else {
-                matchFilter = true;
-            }
-            if (!matchFilter) continue;
+        cordova.getThreadPool().execute(new Runnable() {
+            public void run() {
+                String uri_filter = filter.has(BOX) ? filter.optString(BOX) : "inbox";
+                int fread = filter.has(READ) ? filter.optInt(READ) : -1;
+                int fid = filter.has("_id") ? filter.optInt("_id") : -1;
+                String faddress = filter.optString(ADDRESS);
+                String fcontent = filter.optString(BODY);
+                int indexFrom = filter.has("indexFrom") ? filter.optInt("indexFrom") : 0;
+                int maxCount = filter.has("maxCount") ? filter.optInt("maxCount") : 10;
+                JSONArray jsons = new JSONArray();
+                Activity ctx = cordova.getActivity();
+                Uri uri = Uri.parse((SMS_URI_ALL + uri_filter));
+                Cursor cur = ctx.getContentResolver().query(uri, (String[]) null, "", (String[]) null, null);
+                int i = 0;
+                while (cur.moveToNext()) {
+                    JSONObject json;
+                    boolean matchFilter = false;
+                    if (fid > -1) {
+                        matchFilter = (fid == cur.getInt(cur.getColumnIndex("_id")));
+                    } else if (fread > -1) {
+                        matchFilter = (fread == cur.getInt(cur.getColumnIndex(READ)));
+                    } else if (faddress.length() > 0) {
+                        matchFilter = PhoneNumberUtils.compare(faddress, cur.getString(cur.getColumnIndex(ADDRESS)).trim());
+                    } else if (fcontent.length() > 0) {
+                        matchFilter = fcontent.equals(cur.getString(cur.getColumnIndex(BODY)).trim());
+                    } else {
+                        matchFilter = true;
+                    }
+                    if (!matchFilter) continue;
 
-            if (i < indexFrom) continue;
-            if (i >= indexFrom + maxCount) break;
-            ++i;
+                    if (i < indexFrom){
+                        ++i;
+                        continue;
+                    }
+                    if (i >= indexFrom + maxCount) break;
+                    ++i;
 
-            if ((json = this.getJsonFromCursor(cur)) == null) {
-                callbackContext.error("failed to get json from cursor");
+                    if ((json = getJsonFromCursor(cur)) == null) {
+                        callbackContext.error("failed to get json from cursor");
+                        cur.close();
+                    }
+                    jsons.put((Object) json);
+                }
                 cur.close();
-                return null;
+                callbackContext.success(jsons);
             }
-            jsons.put((Object) json);
-        }
-        cur.close();
-        callbackContext.success(jsons);
+        });
+
         return null;
     }
 
