@@ -1,5 +1,3 @@
-cordova.define("cordova-plugin-sms.SMS", function(require, exports, module) {
-
 var argscheck = require('cordova/argscheck'),
     exec = require('cordova/exec');
 
@@ -89,5 +87,3 @@ safesmsExport.requestPermission = function(successCallback, failureCallback) {
 
 module.exports = safesmsExport;
 
-
-});
