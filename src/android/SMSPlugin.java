@@ -24,6 +24,8 @@ import org.json.JSONObject;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class SMSPlugin
         extends CordovaPlugin {
@@ -247,14 +249,24 @@ public class SMSPlugin
                 String fcontent = filter.optString(BODY);
                 int indexFrom = filter.has("indexFrom") ? filter.optInt("indexFrom") : 0;
                 int maxCount = filter.has("maxCount") ? filter.optInt("maxCount") : 10;
+                int idGreater = filter.has("idGreater") ? filter.optInt("idGreater") : -1;
+                String orderType = filter.has("orderType") ? filter.optString("orderType").toUpperCase() : "DESC";
+                String sortOrder = String.format("date %s", orderType);
                 JSONArray jsons = new JSONArray();
                 Activity ctx = cordova.getActivity();
                 Uri uri = Uri.parse((SMS_URI_ALL + uri_filter));
-                Cursor cur = ctx.getContentResolver().query(uri, (String[]) null, "", (String[]) null, null);
+                String selection = "";
+                List<String> selectionArgs = new ArrayList<>();
+                if(idGreater > -1){
+                    selection = "_id > ?";
+                    selectionArgs.add(Integer.toString(idGreater));
+                }
+                Cursor cur = ctx.getContentResolver().query(uri, (String[]) null, selection, selectionArgs.toArray(new String[]{}), sortOrder);
                 int i = 0;
                 while (cur.moveToNext()) {
                     JSONObject json;
                     boolean matchFilter = false;
+
                     if (fid > -1) {
                         matchFilter = (fid == cur.getInt(cur.getColumnIndex("_id")));
                     } else if (fread > -1) {
