@@ -252,6 +252,7 @@ public class SMSPlugin
                 int maxCount = filter.has("maxCount") ? filter.optInt("maxCount") : 10;
                 int idGreater = filter.has("idGreater") ? filter.optInt("idGreater") : -1;
                 long dateGreater = filter.has("dateGreater") ? filter.optLong("dateGreater") : -1;
+                int minBodyLength = filter.has("minBodyLength") ? filter.optInt("minBodyLength") : -1;
                 String orderType = filter.has("orderType") ? filter.optString("orderType").toUpperCase() : "DESC";
                 String sortOrder = String.format("date %s", orderType);
                 JSONArray jsons = new JSONArray();
@@ -277,6 +278,10 @@ public class SMSPlugin
                         selection.add(DATE + " > ?");
                     }
                     selectionArgs.add(Long.toString(dateGreater));
+                }
+                if(minBodyLength > -1) {
+                    selection.add("length("+ BODY + ") >= CAST(? AS integer)");
+                    selectionArgs.add(Integer.toString(minBodyLength));
                 }
                 Cursor cur = ctx.getContentResolver().query(uri, (String[]) null, generateSelection(selection),
                                                             selectionArgs.toArray(new String[]{}), sortOrder);
