@@ -577,7 +577,7 @@ public class SMSPlugin
         if(selection.isEmpty()){
             return null;
         } else {
-            return TextUtils.join(", ", selection);
+            return TextUtils.join(" AND ", selection);
         }
     }
 }
