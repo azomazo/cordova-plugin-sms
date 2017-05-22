@@ -286,6 +286,7 @@ public class SMSPlugin
                 Cursor cur = ctx.getContentResolver().query(uri, (String[]) null, generateSelection(selection),
                                                             selectionArgs.toArray(new String[]{}), sortOrder);
                 int i = 0;
+                int totalCount = cur.getCount();
                 while (cur.moveToNext()) {
                     JSONObject json;
                     boolean matchFilter = false;
@@ -313,7 +314,17 @@ public class SMSPlugin
                     jsons.put((Object) json);
                 }
                 cur.close();
-                callbackContext.success(jsons);
+
+                JSONObject resultJson = new JSONObject();
+                try {
+                    resultJson.put("totalCount", totalCount);
+                    resultJson.put("values", jsons);
+                } catch(JSONException ex) {
+                    callbackContext.error(ex.getMessage());
+                    return;
+                }
+
+                callbackContext.success(resultJson);
             }
         });
 

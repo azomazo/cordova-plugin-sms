@@ -57,7 +57,15 @@ safesmsExport.sendSMS = function(address, text, successCallback, failureCallback
 };
 
 safesmsExport.listSMS = function(filter, successCallback, failureCallback) {
-	cordova.exec( successCallback, failureCallback, 'SMS', 'listSMS', [ filter ] );
+	var _successCallback = function(result){
+		if(result.totalCount){
+			successCallback(result.values, result.totalCount);
+		} else {
+      successCallback(result);
+		}
+	};
+
+	cordova.exec( _successCallback, failureCallback, 'SMS', 'listSMS', [ filter ] );
 };
 
 safesmsExport.deleteSMS = function(filter, successCallback, failureCallback) {
