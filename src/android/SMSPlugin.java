@@ -13,6 +13,7 @@ import android.os.Handler;
 import android.telephony.PhoneNumberUtils;
 import android.telephony.SmsManager;
 import android.telephony.SmsMessage;
+import android.text.TextUtils;
 import android.util.Log;
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
@@ -250,28 +251,41 @@ public class SMSPlugin
                 int indexFrom = filter.has("indexFrom") ? filter.optInt("indexFrom") : 0;
                 int maxCount = filter.has("maxCount") ? filter.optInt("maxCount") : 10;
                 int idGreater = filter.has("idGreater") ? filter.optInt("idGreater") : -1;
+                long dateGreater = filter.has("dateGreater") ? filter.optLong("dateGreater") : -1;
                 String orderType = filter.has("orderType") ? filter.optString("orderType").toUpperCase() : "DESC";
                 String sortOrder = String.format("date %s", orderType);
                 JSONArray jsons = new JSONArray();
                 Activity ctx = cordova.getActivity();
                 Uri uri = Uri.parse((SMS_URI_ALL + uri_filter));
-                String selection = "";
+                List<String> selection = new ArrayList<>();
                 List<String> selectionArgs = new ArrayList<>();
                 if(idGreater > -1){
-                    selection = "_id > ?";
+                    selection.add("_id > ?");
                     selectionArgs.add(Integer.toString(idGreater));
+                } else if(fid > -1){
+                    selection.add("_id = ?");
+                    selectionArgs.add(Integer.toString(fid));
                 }
-                Cursor cur = ctx.getContentResolver().query(uri, (String[]) null, selection, selectionArgs.toArray(new String[]{}), sortOrder);
+                if(fread > -1) {
+                    selection.add(READ + " = ?");
+                    selectionArgs.add(Integer.toString(fread));
+                }
+                if(dateGreater > -1) {
+                    if(orderType.equals("DESC")) {
+                        selection.add(DATE + " < ?");
+                    } else {
+                        selection.add(DATE + " > ?");
+                    }
+                    selectionArgs.add(Long.toString(dateGreater));
+                }
+                Cursor cur = ctx.getContentResolver().query(uri, (String[]) null, generateSelection(selection),
+                                                            selectionArgs.toArray(new String[]{}), sortOrder);
                 int i = 0;
                 while (cur.moveToNext()) {
                     JSONObject json;
                     boolean matchFilter = false;
 
-                    if (fid > -1) {
-                        matchFilter = (fid == cur.getInt(cur.getColumnIndex("_id")));
-                    } else if (fread > -1) {
-                        matchFilter = (fread == cur.getInt(cur.getColumnIndex(READ)));
-                    } else if (faddress.length() > 0) {
+                    if (faddress.length() > 0) {
                         matchFilter = PhoneNumberUtils.compare(faddress, cur.getString(cur.getColumnIndex(ADDRESS)).trim());
                     } else if (fcontent.length() > 0) {
                         matchFilter = fcontent.equals(cur.getString(cur.getColumnIndex(BODY)).trim());
@@ -557,5 +571,13 @@ public class SMSPlugin
 
     protected boolean hasSmsPermissions() {
         return cordova.hasPermission(PERMISSION_SMS_READ) && cordova.hasPermission(PERMISSION_SMS_RECEIVE);
+    }
+
+    private String generateSelection(List<String> selection){
+        if(selection.isEmpty()){
+            return null;
+        } else {
+            return TextUtils.join(", ", selection);
+        }
     }
 }
