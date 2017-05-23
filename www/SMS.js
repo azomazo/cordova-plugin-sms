@@ -58,7 +58,7 @@ safesmsExport.sendSMS = function(address, text, successCallback, failureCallback
 
 safesmsExport.listSMS = function(filter, successCallback, failureCallback) {
 	var _successCallback = function(result){
-		if(result.totalCount){
+		if(result.hasOwnProperty('totalCount')){
 			successCallback(result.values, result.totalCount);
 		} else {
       successCallback(result);
