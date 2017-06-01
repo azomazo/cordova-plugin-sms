@@ -317,9 +317,11 @@ public class SMSPlugin
 
                 JSONObject resultJson = new JSONObject();
                 try {
+                    Log.d(LOGTAG, "Prepare result in method " + ACTION_LIST_SMS);
                     resultJson.put("totalCount", totalCount);
                     resultJson.put("values", jsons);
                 } catch(JSONException ex) {
+                    Log.e(LOGTAG, "Error when prepare result in method " + ACTION_LIST_SMS, ex);
                     callbackContext.error(ex.getMessage());
                     return;
                 }
