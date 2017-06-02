@@ -320,10 +320,23 @@ public class SMSPlugin
                     Log.d(LOGTAG, "Prepare result in method " + ACTION_LIST_SMS);
                     resultJson.put("totalCount", totalCount);
                     resultJson.put("values", jsons);
+                    Log.d(LOGTAG, "Result ready in method " + ACTION_LIST_SMS);
                 } catch(JSONException ex) {
                     Log.e(LOGTAG, "Error when prepare result in method " + ACTION_LIST_SMS, ex);
                     callbackContext.error(ex.getMessage());
                     return;
+                }
+
+                if(resultJson.length() > 0){
+                    String resultJsonString = null;
+                    try {
+                        resultJsonString = resultJson.toString(2);
+                        Log.d(LOGTAG, "Json result for method " + ACTION_LIST_SMS + ": " + resultJsonString);
+                    } catch (JSONException e) {
+                        Log.e(LOGTAG, "Error when generate json from jsonResult", e);
+                    }
+                } else {
+                    Log.d(LOGTAG, "Json result for method " + ACTION_LIST_SMS + " has no content. JSON is empty");
                 }
 
                 callbackContext.success(resultJson);
