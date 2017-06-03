@@ -365,7 +365,7 @@ public class SMSPlugin
                         json.put(keys[j], cur.getFloat(j));
                         break;
                     case Cursor.FIELD_TYPE_STRING:
-                        json.put(keys[j], cur.getString(j));
+                        json.put(keys[j], removeUTFSymbols(cur.getString(j)));
                         break;
                     case Cursor.FIELD_TYPE_BLOB:
                         json.put(keys[j], cur.getBlob(j));
@@ -610,5 +610,9 @@ public class SMSPlugin
         } else {
             return TextUtils.join(" AND ", selection);
         }
+    }
+
+    private String removeUTFSymbols(String input) {
+        return input.replaceAll("\\\\u202[89]", " ");
     }
 }
