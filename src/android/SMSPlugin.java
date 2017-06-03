@@ -613,6 +613,6 @@ public class SMSPlugin
     }
 
     private String removeUTFSymbols(String input) {
-        return input.replaceAll("\\\\u202[89]", " ");
+        return input.replaceAll("\u2028|\u2029", " ");
     }
 }
